@@ -1,0 +1,66 @@
+FROM littleforce/python:3.8-base
+USER root
+
+
+ENV LANG=C.UTF-8 \
+    SHELL=/bin/bash \
+    NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100 \
+    HOME=/home/jovyan \
+    DEBIAN_FRONTEND=noninteractive \
+    NB_WORK_DIR=/work
+
+
+ADD fix-permissions /usr/local/bin/fix-permissions
+RUN useradd $NB_USER -u $NB_UID -g $NB_GID -m \
+    && chmod g+w /etc/passwd /etc/group \
+    && fix-permissions $HOME \
+    && chmod a+rx /usr/local/bin/fix-permissions \
+    && mkdir $NB_WORK_DIR \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends libsqlite3-dev curl npm \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install npm@latest -g \
+    && npm install -g n \
+    && n stable \
+    && chown -R $NB_USER $NB_WORK_DIR \
+    && chown -R $NB_USER $HOME \
+    && rm -rf /var/lib/apt/* 
+
+
+EXPOSE 8888
+
+#ENTRYPOINT ["tini", "--"]
+
+USER $NB_USER
+WORKDIR $NB_WORK_DIR
+ENV PATH=/home/jovyan/.local/bin:$PATH
+
+RUN echo "cython==0.29.24	\n\
+numpy==1.19.2	\n\
+pandas==1.1.0	\n\
+matplotlib==3.4.3	\n\
+lxml==4.6.3		\n\
+notebook==6.4.5		\n\
+ipywidgets==7.6.5	\n\
+jupyterlab==3.2.1	\n\
+" > requirements.txt \
+    && cat requirements.txt \
+    && pip install -r requirements.txt -i https://mirror.baidu.com/pypi/simple \
+    && rm -rf requirements.txt \
+    && jupyter notebook --generate-config \
+    && echo " \
+\nc.NotebookApp.ip = '0.0.0.0' \
+\nc.NotebookApp.port = 8888 \
+\nc.NotebookApp.notebook_dir = '/work' \
+\nc.NotebookApp.password = 'argon2:\$argon2id\$v=19\$m=10240,t=10,p=8\$VTtTvfhYs+8D3NfPH4LVHQ\$Jx8mRD3AQqbIr3gVn+B2rQ' \
+\nc.NotebookApp.allow_root = True \
+\nc.NotebookApp.open_browser = False \
+" >> /home/jovyan/.jupyter/jupyter_notebook_config.py 
+    # && jupyter labextension install @kiteco/jupyterlab-kite Kite
+    
+
+CMD ["jupyter", "lab", "--ip=*", "--port=8888", "--no-browser", "--notebook-dir=/work"]
+
