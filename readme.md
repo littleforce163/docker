@@ -1,1 +1,1 @@
-ref: https://hub.fastgit.org/docker-library/python
+ref: https://github.com/docker-library/python
