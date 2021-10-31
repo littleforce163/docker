@@ -58,8 +58,8 @@ jupyterlab==3.2.1	\n\
 \nc.NotebookApp.password = 'argon2:\$argon2id\$v=19\$m=10240,t=10,p=8\$VTtTvfhYs+8D3NfPH4LVHQ\$Jx8mRD3AQqbIr3gVn+B2rQ' \
 \nc.NotebookApp.allow_root = True \
 \nc.NotebookApp.open_browser = False \
-" >> /home/jovyan/.jupyter/jupyter_notebook_config.py 
-    # && jupyter labextension install @kiteco/jupyterlab-kite Kite
+" >> /home/jovyan/.jupyter/jupyter_notebook_config.py \
+    && jupyter labextension install @kiteco/jupyterlab-kite
     
 
 CMD ["jupyter", "lab", "--ip=*", "--port=8888", "--no-browser", "--notebook-dir=/work"]
