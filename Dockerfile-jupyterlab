@@ -47,6 +47,8 @@ notebook==6.4.5		\n\
 ipywidgets==7.6.5	\n\
 jupyterlab==3.2.1	\n\
 xeus-python==0.13.4	\n\
+jupyterlab_execute_time==2.1.0 \n\
+ipympl==0.8.2		\n\
 " > requirements.txt \
     && cat requirements.txt \
     && pip install -r requirements.txt -i https://mirror.baidu.com/pypi/simple \
@@ -61,7 +63,6 @@ xeus-python==0.13.4	\n\
 \nc.NotebookApp.open_browser = False \
 " >> /home/jovyan/.jupyter/jupyter_notebook_config.py \
     && jupyter labextension install @kiteco/jupyterlab-kite \
-    && jupyter labextension install jupyterlab-execute-time \
     && jupyter labextension install @jupyterlab/debugger
     
 
