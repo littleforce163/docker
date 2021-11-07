@@ -53,6 +53,7 @@ jupyterlab_execute_time==2.1.0 \n\
 ipympl==0.8.2		\n\
 latexify-py==0.0.7	\n\
 jupyterlab-git==0.33.0	\n\
+jupyterlab_latex==3.1.0	\n\
 " > requirements.txt \
     && cat requirements.txt \
     && pip install -r requirements.txt -i https://mirror.baidu.com/pypi/simple \
@@ -68,7 +69,7 @@ jupyterlab-git==0.33.0	\n\
 \nc.NotebookApp.open_browser = False \
 " >> /home/jovyan/.jupyter/jupyter_notebook_config.py \
     && jupyter labextension install @kiteco/jupyterlab-kite \
-    && jupyter labextension install @jupyterlab/debugger
+    && jupyter labextension install @jupyterlab/debugger \
     && echo "#!/bin/bash \n\
 jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.password=\$JUPYTERLAB_PASSWORD \n\
 " > ~/.start.sh \
@@ -76,6 +77,3 @@ jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.pas
 
 
 CMD ["/home/jovyan/.start.sh"]
-
-# docker run -it -p 8888:8888 -e JUPYTERLAB_PASSWORD=sha1:5c85e48707d5:8e0ff0e5baae469ca176bb860cfcf0b5e7c13afe -v /work:/work jupyterlab:v1.0.1
-
