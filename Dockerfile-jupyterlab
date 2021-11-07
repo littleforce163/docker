@@ -71,7 +71,7 @@ jupyterlab_latex==3.1.0	\n\
     && jupyter labextension install @kiteco/jupyterlab-kite \
     && jupyter labextension install @jupyterlab/debugger \
     && jupyter labextension install @jupyterlab/git \
-    && jupyter serverextension enable --py jupyterlab_git \
+    # && jupyter serverextension enable --py jupyterlab_git \
     && echo "#!/bin/bash \n\
 jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.password=\$JUPYTERLAB_PASSWORD \n\
 " > $HOME/.start.sh \
