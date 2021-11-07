@@ -70,10 +70,13 @@ jupyterlab_latex==3.1.0	\n\
 " >> /home/jovyan/.jupyter/jupyter_notebook_config.py \
     && jupyter labextension install @kiteco/jupyterlab-kite \
     && jupyter labextension install @jupyterlab/debugger \
+    && jupyter labextension install @jupyterlab/git \
+    && jupyter serverextension enable --py jupyterlab_git \
     && echo "#!/bin/bash \n\
 jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.password=\$JUPYTERLAB_PASSWORD \n\
-" > ~/.start.sh \
-    && chmod +x ~/.start.sh
+" > $HOME/.start.sh \
+    && chmod +x $HOME/.start.sh
 
 
 CMD ["/home/jovyan/.start.sh"]
+
