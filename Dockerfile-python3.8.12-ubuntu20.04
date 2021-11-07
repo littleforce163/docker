@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-ENV PYTHON_VERSION 3.8.8
+ENV PYTHON_VERSION 3.8.12
 ENV PYTHON_PIP_VERSION 21.2.4
 ENV PYTHON_GET_PIP_URL https://bootstrap.pypa.io/get-pip.py
 ENV PYTHON_SETUPTOOLS_VERSION 57.5.0
@@ -14,9 +14,11 @@ RUN set -ex \
 	&& apt-get install -y --no-install-recommends \
 		ca-certificates \
 		netbase \
+		tzdata \
 # && rm -rf /var/lib/apt/lists/* \
 	&& savedAptMark="$(apt-mark showmanual)" \
 	&& apt-get update && apt-get install -y --no-install-recommends \
+		build-essential \
 		dpkg-dev \
 		gcc \
 		libbluetooth-dev \
@@ -26,10 +28,13 @@ RUN set -ex \
 		libffi-dev \
 		libgdbm-dev \
 		liblzma-dev \
+		llvm \
+		libncurses5-dev \
 		libncursesw5-dev \
 		libreadline-dev \
 		libsqlite3-dev \
 		libssl-dev \
+		python-openssl \
 		make \
 		tk-dev \
 		uuid-dev \
@@ -81,6 +86,8 @@ RUN set -ex \
 	&& ln -s python3 python \
 	&& ln -s python3-config python-config \
 	&& ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime \
+	&& echo "Asia/Shanghai" > /etc/timezone \
+	&& dpkg-reconfigure -f noninteractive tzdata \
 	&& savedAptMark="$(apt-mark showmanual)" \
 	&& apt-get update \
 	&& apt-get install -y --no-install-recommends wget \
@@ -105,3 +112,4 @@ RUN set -ex \
 	&& rm -rf /var/lib/apt/* 
 
 CMD ["python"]
+
