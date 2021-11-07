@@ -105,5 +105,3 @@ RUN set -ex \
 	&& rm -rf /var/lib/apt/* 
 
 CMD ["python"]
-
-
