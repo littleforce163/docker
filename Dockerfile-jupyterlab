@@ -1,3 +1,4 @@
+# v1.0.1: password can be set by env
 FROM littleforce/python:3.8-base
 USER root
 
@@ -21,7 +22,7 @@ RUN useradd $NB_USER -u $NB_UID -g $NB_GID -m \
     && apt-get update \
     && apt-get install -y --no-install-recommends libsqlite3-dev curl npm \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y nodejs git \
     && npm install npm@latest -g \
     && npm install -g n \
     && n stable \
@@ -37,6 +38,7 @@ EXPOSE 8888
 USER $NB_USER
 WORKDIR $NB_WORK_DIR
 ENV PATH=/home/jovyan/.local/bin:$PATH
+ENV JUPYTERLAB_PASSWORD=sha1:5c85e48707d5:8e0ff0e5baae469ca176bb860cfcf0b5e7c13afe
 
 RUN echo "cython==0.29.24	\n\
 numpy==1.19.2	\n\
@@ -49,6 +51,8 @@ jupyterlab==3.2.1	\n\
 xeus-python==0.13.4	\n\
 jupyterlab_execute_time==2.1.0 \n\
 ipympl==0.8.2		\n\
+latexify-py==0.0.7	\n\
+jupyterlab-git==0.33.0	\n\
 " > requirements.txt \
     && cat requirements.txt \
     && pip install -r requirements.txt -i https://mirror.baidu.com/pypi/simple \
@@ -58,13 +62,20 @@ ipympl==0.8.2		\n\
 \nc.NotebookApp.ip = '0.0.0.0' \
 \nc.NotebookApp.port = 8888 \
 \nc.NotebookApp.notebook_dir = '/work' \
-\nc.NotebookApp.password = 'argon2:\$argon2id\$v=19\$m=10240,t=10,p=8\$VTtTvfhYs+8D3NfPH4LVHQ\$Jx8mRD3AQqbIr3gVn+B2rQ' \
+#\nc.NotebookApp.password = 'argon2:\$argon2id\$v=19\$m=10240,t=10,p=8\$VTtTvfhYs+8D3NfPH4LVHQ\$Jx8mRD3AQqbIr3gVn+B2rQ' \
+\nc.NotebookApp.password = 'sha1:5c85e48707d5:8e0ff0e5baae469ca176bb860cfcf0b5e7c13afe' \
 \nc.NotebookApp.allow_root = True \
 \nc.NotebookApp.open_browser = False \
 " >> /home/jovyan/.jupyter/jupyter_notebook_config.py \
     && jupyter labextension install @kiteco/jupyterlab-kite \
     && jupyter labextension install @jupyterlab/debugger
-    
+    && echo "#!/bin/bash \n\
+jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.password=\$JUPYTERLAB_PASSWORD \n\
+" > ~/.start.sh \
+    && chmod +x ~/.start.sh
 
-CMD ["jupyter", "lab", "--ip=*", "--port=8888", "--no-browser", "--notebook-dir=/work"]
+
+CMD ["/home/jovyan/.start.sh"]
+
+# docker run -it -p 8888:8888 -e JUPYTERLAB_PASSWORD=sha1:5c85e48707d5:8e0ff0e5baae469ca176bb860cfcf0b5e7c13afe -v /work:/work jupyterlab:v1.0.1
 
