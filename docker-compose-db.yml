@@ -1,0 +1,63 @@
+version: "3.7"
+services:
+  frontend:
+    image: littleforce/fe:1.0
+    container_name: fe
+    networks:
+      - traefik-public
+      # - default
+    ports:
+      - published: "9030"
+        target: "9030"
+        mode: host
+    environment:
+      - "TZ=Asia/Shanghai"
+
+  backend1:
+    image: littleforce/be:1.0
+    environment:
+      - "TZ=Asia/Shanghai"
+      - "WORKERS=1"
+    networks:
+      - traefik-public
+    container_name: be1
+
+  backend2:
+    image: littleforce/be:1.0
+    environment:
+      - "TZ=Asia/Shanghai"
+      - "WORKERS=2"
+    networks:
+      - traefik-public
+    container_name: be2
+
+  backend3:
+    image: littleforce/be:1.0
+    environment:
+      - "TZ=Asia/Shanghai"
+      - "WORKERS=3"
+    networks:
+      - traefik-public
+    container_name: be3
+
+#  portainer:
+#    image: cr.portainer.io/portainer/portainer-ce:2.9.3
+#    ports:
+#      - "9000:9000"
+#    volumes:
+#      - "/var/run/docker.sock:/var/run/docker.sock"
+#    networks:
+#      - traefik-public
+
+#docker run -d -p 8000:8000 -p 9443:9443 -p 9000:9000 \
+#    --name portainer \
+#    -v /var/run/docker.sock:/var/run/docker.sock \
+#    cr.portainer.io/portainer/portainer-ce:2.9.3
+
+# mysql -h 127.0.0.1 -P9030 -uroot
+# SHOW PROC '/frontends'\G
+# ALTER SYSTEM ADD BACKEND "host:port";
+
+networks:
+  traefik-public:
+    external: true
