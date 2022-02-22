@@ -1,0 +1,34 @@
+FROM littleforce/python:3.6-base
+
+ENV MINI_CONDA_VERSION=4.11.0
+ENV PATH=/opt/miniconda3/bin:$PATH
+# ENV MINI_CONDA_HOME=/opt/miniconda3 
+
+RUN apt-get update \
+	&& apt-get install git wget curl net-tools -y \
+	&& wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh \
+  && bash Miniconda3-py38_4.11.0-Linux-x86_64.sh -b -p /opt/miniconda3 
+
+RUN conda config --add channels conda-forge \
+	&& conda config --add channels bioconda \
+	&& conda config --add channels r \
+	&& conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free \
+	&& conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main \
+	&& conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge \
+	&& conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda \
+	&& conda config --set show_channel_urls yes 
+
+RUN conda create -y -n stargan-v2 python=3.6.7 
+
+RUN conda init bash \
+	&& . ~/.bashrc \
+	&& conda activate stargan-v2 \
+	&& conda install -y pytorch=1.4.0 torchvision=0.5.0 cudatoolkit=10.0 -c pytorch \
+	&& conda install -y x264=='1!152.20180717' ffmpeg=4.0.2 -c conda-forge 
+
+RUN . ~/.bashrc \
+	&& conda activate stargan-v2 \
+	&& pip install opencv-python==4.1.2.30 ffmpeg-python==0.2.0 scikit-image==0.16.2 -i https://mirror.baidu.com/pypi/simple \
+	&& pip install pillow==7.0.0 scipy==1.2.1 tqdm==4.43.0 munch==2.5.0 -i https://mirror.baidu.com/pypi/simple
+
+
