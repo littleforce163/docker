@@ -1,0 +1,40 @@
+FROM ubuntu:20.04
+
+ENV JAVA_VERSION 1.8.0_321
+ENV JAVA_HOME /usr/local/java/jdk
+ENV JRE_HOME ${JAVA_HOME}/jre 
+ENV CLASSPATH .:${JAVA_HOME}/lib:${JRE_HOME}/lib
+ENV PATH ${JAVA_HOME}/bin:$PATH
+ENV TZ=Asia/Shanghai
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG C.UTF-8
+ENV MAVEN_VERSION 3.8.5
+ENV MAVEN_HOME /usr/local/maven/apache-maven-$MAVEN_VERSION
+ENV PATH ${MAVEN_HOME}/bin:$PATH
+
+WORKDIR /java
+
+RUN mkdir /usr/local/java \
+	&& apt-get update \
+	&& apt-get install -y \
+		ca-certificates \
+		netbase \
+		tzdata \
+		wget curl net-tools git inetutils-ping \
+	#&& wget https://download.oracle.com/otn/java/jdk/8u321-b07/df5ad55fdd604472a86a45a217032c7d/jdk-8u321-linux-x64.tar.gz \
+	#&& tar xvzf jdk-8u321-linux-x64.tar.gz \
+	#&& mv jdk$JAVA_VERSION $JAVA_HOME \
+	#&& ln -s /usr/local/java/jdk$JAVA_VERSION /usr/local/java/jdk \
+	#&& rm -rf jdk-8u321-linux-x64.tar.gz \
+	&& wget https://dlcdn.apache.org/maven/maven-3/3.8.5/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz \
+	&& tar xvzf apache-maven-$MAVEN_VERSION-bin.tar.gz \
+	&& mkdir /usr/local/maven \
+	&& mv apache-maven-$MAVEN_VERSION /usr/local/maven \
+	&& rm -rf apache-maven-$MAVEN_VERSION-bin.tar.gz \
+	&& rm -rf apache-maven-$MAVEN_VERSION \
+	&& rm -rf /var/lib/apt/* 
+
+ADD jdk-8u321-linux-x64.tar.gz /usr/local/java
+RUN ln -s /usr/local/java/jdk1.8.0_321 /usr/local/java/jdk 
+
+CMD ['bash']
