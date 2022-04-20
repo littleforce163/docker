@@ -9,8 +9,8 @@ services:
     networks:
       - traefik-public
     ports: 
-      - published: "80"
-        target: "80"
+      - published: 80
+        target: 80
         mode: host
       - "10180:8080"
       - "10182:8082"
