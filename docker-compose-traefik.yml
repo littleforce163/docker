@@ -1,0 +1,98 @@
+# 2022-04-20, test traefik and gitlab
+version: "3.7"
+services:
+
+  traefik:
+    image: traefik:v2.3.1
+    container_name: traefik
+    restart: always
+    networks:
+      - traefik-public
+    ports: 
+      - published: "80"
+        target: "80"
+        mode: host
+      - "10180:8080"
+      - "10182:8082"
+    environment: 
+      - "TZ=Asia/Shanghai"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/log/traefik/:/logs/
+    command:
+      # 1.Enable Docker in Traefik, so that it reads labels from Docker services
+      - "--providers.docker=true"
+      # 2.Enable Docker Swarm mode
+      - "--providers.docker.swarmmode=false"
+      # 3.Add a constraint to only use services with the label for this stack
+      # from the env var TRAEFIK_TAG
+      - "--providers.docker.constraints=LabelRegx(`traefik.constraint-label-stack`, `p.+`)"
+      # 4.Do not expose all Docker services, only the ones explicitly exposed
+      - "--providers.docker.exposedbydefault=false"
+      # 5-8
+      - "--providers.file.watch=true"
+      - "--entryPoints.http.address=:80"
+      - "--entryPoints.http.forwardedHeaders.trustedIPs=0.0.0.0/0"
+      - "--entryPoints.traefik.address=:8080"
+      # 9.Enable the Traefik log, for configurations and errors
+      - "--log=true"
+      # 10-11
+      - "--log.level=INFO"
+      - "--log.filePath=/logs/traefik.log"
+      # 12.Enable the Dashboard and API
+      - "--api=true"
+      # 13-14
+      - "--api.insecure=true"
+      - "--ping=true"
+      # 15.Enable the access log, with HTTP requests
+      - "--accessLog=true"
+      # 16-21
+      - "--accesslog.filePath=/logs/traefik-access.log"
+      - "--accesslog.filters.statuscodes=200,300-302"
+      - "--accesslog.filters.minduration=200ms"
+      - "--accesslog.filters.retryattempts"
+      - "--accesslog.bufferingSize=200"
+      - "--accesslog.fields.headers.names.ClientAddr=keep"
+
+    labels:
+      # 1.Enable Traefik for this service, to make it available in the public network
+      - "traefik.enable=true"
+      # 2.Use the traefik-public network (declared below)
+      - "traefik.docker.network=traefik-public"
+      # 3.Use the custom label "traefik.constraint-label=traefik-public"
+      # This public Traefik will only use services with this label
+      - "traefik.constraint-label=traefik_public_tag"
+      # 4-6
+      - "traefik.http.routers.stack-proxy-http.rule=Host(`0.0.0.0`)"
+      - "traefik.http.routers.stack-proxy-http.entrypoints=http"
+      - "traefik.http.services.stack-porxy.loadbalancer.server.port=80"
+      
+
+  gitlab:
+    image: gitlab/gitlab-ce:14.9.1-ce.0
+    container_name: my-gitlab
+    restart: always
+    ports:
+      - "10080:80"
+      - "9922:22"
+    environment:
+      - "TZ=Asia/Shanghai"
+    networks: 
+      - traefik-public
+    volumes:
+      - "/data/gitlab/etc:/etc/gitlab"
+      - "/data/gitlab/log:/var/log/gitlab"
+      - "/data/gitlab/opt:/var/opt/gitlab"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=gitlab"
+      - "traefik.http.routers.gitlab-backend-http.entryPoints=http"
+      - "traefik.http.routers.gitlab-backend-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)"
+      - "traefik.http.services.gitlab-backend.loadbalancer.server.port=10080"
+
+
+networks:
+  traefik-public:
+    # Allow setting it to false for testing
+    external: true
+
