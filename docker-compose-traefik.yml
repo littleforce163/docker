@@ -87,8 +87,8 @@ services:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=gitlab"
       - "traefik.http.routers.gitlab-backend-http.entryPoints=http"
-      - "traefik.http.routers.gitlab-backend-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)"
-      - "traefik.http.services.gitlab-backend.loadbalancer.server.port=10080"
+      - "traefik.http.routers.gitlab-backend-http.rule=Host(`0.0.0.0`)"
+      - "traefik.http.services.gitlab-backend.loadbalancer.server.port=80"
 
 
 networks:
