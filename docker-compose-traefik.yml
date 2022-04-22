@@ -1,4 +1,4 @@
-# 2022-04-20, test traefik and gitlab
+# 2022-04-20, test traefik and gitlab, assume that the domain is: wode.com
 version: "3.7"
 services:
 
@@ -9,11 +9,10 @@ services:
     networks:
       - traefik-public
     ports: 
-      - published: 80
-        target: 80
-        mode: host
-      - "10180:8080"
-      - "10182:8082"
+      - "80:80"
+      - "443:443"
+      #- "10180:8080"
+      #- "10182:8082"
     environment: 
       - "TZ=Asia/Shanghai"
     volumes:
@@ -23,21 +22,23 @@ services:
       # 1.Enable Docker in Traefik, so that it reads labels from Docker services
       - "--providers.docker=true"
       # 2.Enable Docker Swarm mode
-      - "--providers.docker.swarmmode=false"
+      - "--providers.docker.swarmMode=false"
       # 3.Add a constraint to only use services with the label for this stack
       # from the env var TRAEFIK_TAG
-      - "--providers.docker.constraints=LabelRegx(`traefik.constraint-label-stack`, `gitlab.+`)"
+      #- "--providers.docker.constraints=LabelRegx(`traefik.constraint-label-stack`, `gitlab.+`)"
       # 4.Do not expose all Docker services, only the ones explicitly exposed
       - "--providers.docker.exposedbydefault=false"
       # 5-8
       - "--providers.file.watch=true"
       - "--entryPoints.http.address=:80"
+      - "--entryPoints.https.address=:443"
       - "--entryPoints.http.forwardedHeaders.trustedIPs=0.0.0.0/0"
       - "--entryPoints.traefik.address=:8080"
+      
       # 9.Enable the Traefik log, for configurations and errors
       - "--log=true"
       # 10-11
-      - "--log.level=INFO"
+      - "--log.level=DEBUG"
       - "--log.filePath=/logs/traefik.log"
       # 12.Enable the Dashboard and API
       - "--api=true"
@@ -69,30 +70,46 @@ services:
       
 
   gitlab:
-    image: gitlab/gitlab-ce:14.9.1-ce.0
+    image: gitlab/gitlab-ce:14.9.3-ce.0
     container_name: my-gitlab
+    #hostname: git.wode.com
     restart: always
+    networks:
+      - traefik-public
     ports:
       - "10080:80"
       - "9922:22"
     environment:
-      - "TZ=Asia/Shanghai"
-    networks: 
-      - traefik-public
+      - TZ=Asia/Shanghai
+      - DEBUG=false
+      - GITLAB_OMNIBUS_CONFIG=external_url 'http://git.wode.com';gitlab_rails['time_zone']='Asia/Shanghai';
+
     volumes:
       - "/data/gitlab/etc:/etc/gitlab"
       - "/data/gitlab/log:/var/log/gitlab"
       - "/data/gitlab/opt:/var/opt/gitlab"
     labels:
       - "traefik.enable=true"
-      - "traefik.constraint-label-stack=gitlab"
-      - "traefik.http.routers.gitlab-backend-http.entryPoints=http"
-      - "traefik.http.routers.gitlab-backend-http.rule=Host(`0.0.0.0`)"
-      - "traefik.http.services.gitlab-backend.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.gitlab-frontend-http.entrypoints=http"
+      - "traefik.http.routers.gitlab-frontend-http.rule=Host(`git.wode.com`)"
+      - "traefik.http.services.gitlab-frontend.loadbalancer.server.port=80"
 
+  tomcat:
+    image: tomcat:8.5.78-jdk8
+    restart: always
+    networks:
+      - traefik-public
+    ports:
+      - "18080:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.tomcat-frontend-http.entrypoints=http"
+      - "traefik.http.routers.tomcat-frontend-http.rule=Host(`tomcat.wode.com`)"
+      - "traefik.http.services.tomcat-frontend.loadbalancer.server.port=8080"
 
 networks:
   traefik-public:
-    # Allow setting it to false for testing
     external: true
 
