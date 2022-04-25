@@ -1,4 +1,5 @@
 # v1.0.1: password can be set by env
+# v1.0.2: volume $NB_WORK_DIR
 FROM littleforce/python:3.8-base
 USER root
 
@@ -77,6 +78,7 @@ jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.pas
 " > $HOME/.start.sh \
     && chmod +x $HOME/.start.sh
 
+VOLUME $NB_WORK_DIR
 
 CMD ["/home/jovyan/.start.sh"]
 
