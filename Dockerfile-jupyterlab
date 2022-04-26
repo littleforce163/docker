@@ -1,5 +1,5 @@
 # v1.0.1: password can be set by env
-# v1.0.2: volume $NB_WORK_DIR
+# v1.0.2: volume $NB_WORK_DIR, jupytrtlab version to: 3.3.4
 FROM littleforce/python:3.8-base
 USER root
 
@@ -48,7 +48,8 @@ matplotlib==3.4.3	\n\
 lxml==4.6.3		\n\
 notebook==6.4.5		\n\
 ipywidgets==7.6.5	\n\
-jupyterlab==3.2.1	\n\
+#jupyterlab==3.2.1	\n\
+jupyterlab==3.3.4	\n\
 xeus-python==0.13.4	\n\
 jupyterlab_execute_time==2.1.0 \n\
 ipympl==0.8.2		\n\
@@ -81,4 +82,3 @@ jupyter lab --ip=* --port=8888 --no-browser --notebook-dir=/work --ServerApp.pas
 VOLUME $NB_WORK_DIR
 
 CMD ["/home/jovyan/.start.sh"]
-
