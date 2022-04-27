@@ -1,7 +1,11 @@
 # 2022-04-20, test traefik and gitlab
 # sudo touch /data/acme.json && chmod 600 /data/acme.json
-# docker network create traefik-public
-# domain name: wode.com
+# ssh-keygen -f ~/.ssh/id_rsa -C 'xxxxx@163.com' -N ''
+# version: v1.3
+# param: 80 and 443 for web
+# param: 10022 for ssh git
+# param: domain name: wode.com
+# param: email: xxxxx@163.com
 version: "3.7"
 services:
 
@@ -14,6 +18,7 @@ services:
     ports: 
       - "80:80"
       - "443:443"
+      - "10022:23"
     environment: 
       - "TZ=Asia/Shanghai"
     volumes:
@@ -23,18 +28,19 @@ services:
     command:
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=false"
-      #- "--providers.docker.constraints=LabelRegx(`traefik.constraint-label-stack`, `git.+`)"
+      #- "--providers.docker.constraints=LabelRegx(`traefik.constraint-label-stack`, `gitlab.+`)"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.file.watch=true"
       - "--entryPoints.http.address=:80"
       - "--entryPoints.https.address=:443"
+      - "--entrypoints.ssh.address=:23"
       - "--entryPoints.http.forwardedHeaders.trustedIPs=0.0.0.0/0"
       - "--entryPoints.traefik.address=:8080"
       - "--log=true"
       - "--log.level=INFO"
       - "--log.filePath=/logs/traefik.log"
       - "--api=true"
-      - "--api.insecure=true"
+      - "--api.insecure=false"
       - "--ping=true"
       - "--accessLog=true"
       - "--accesslog.filePath=/logs/traefik-access.log"
@@ -46,9 +52,8 @@ services:
 
       - "--certificatesResolvers.lets-encrypt.acme.httpChallenge=true"
       - "--certificatesResolvers.lets-encrypt.acme.storage=acme.json"
-      - "--certificatesResolvers.lets-encrypt.acme.email=xxxxxx@163.com"
+      - "--certificatesResolvers.lets-encrypt.acme.email=xxxxx@163.com"
       - "--certificatesResolvers.lets-encrypt.acme.httpChallenge.entrypoint=http"
-
 
     deploy:
       resources:
@@ -68,7 +73,7 @@ services:
 
       # config below domains to https
       - "traefik.http.routers.stack-proxy-http.tls.certresolver=lets-encrypt"
-      - "traefik.http.routers.stack-proxy-http.tls.domains[0].main=traefik.wode.com"
+      - "traefik.http.routers.stack-proxy-http.tls.domains[0].main=*.wode.com"
       - "traefik.http.routers.stack-proxy-http.tls.domains[0].sans=wode.com"
 
       # HTTP REDIRECT
@@ -79,20 +84,17 @@ services:
 
 
   gitlab:
-    image: gitlab/gitlab-ce:13.10.0-ce.0
+    image: gitlab/gitlab-ce:14.9.1-ce.0
     container_name: my-gitlab
     restart: always
     hostname: git.wode.com
     networks:
       - traefik-public
-    ports:
-      - "10081:80"
-      - "10083:443"
-      - "9922:22"
+
     environment:
       - TZ=Asia/Shanghai
       - DEBUG=false
-      - GITLAB_OMNIBUS_CONFIG=external_url 'http://git.wode.com';gitlab_rails['time_zone']='Asia/Shanghai';
+      - GITLAB_OMNIBUS_CONFIG=external_url 'http://git.wode.com';gitlab_rails['time_zone']='Asia/Shanghai';gitlab_rails['gitlab_shell_ssh_port']='10022';
   
     volumes:
       - "/data/gitlab/etc:/etc/gitlab"
@@ -102,10 +104,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4.0'
-          memory: 8000M
+          cpus: '2.50'
+          memory: 4000M
         reservations:
-            memory: 200M
+            memory: 300M
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -120,14 +122,17 @@ services:
       - "traefik.http.routers.gitlab.service=gitlab_service"
       - "traefik.http.services.gitlab_service.loadbalancer.server.port=80"
       
+      # 2022-04-27, SSH
+      - "traefik.tcp.routers.gitlab-ssh.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.gitlab-ssh.entrypoints=ssh"
+      - "traefik.tcp.routers.gitlab-ssh.service=gitlab-ssh-service"
+      - "traefik.tcp.services.gitlab-ssh-service.loadbalancer.server.port=22"
 
   tomcat:
     image: tomcat:8.5.31-jre8
     restart: always
     networks:
       - traefik-public
-    ports:
-      - "10080:8080"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -136,26 +141,6 @@ services:
       - "traefik.http.services.tomcat-frontend.loadbalancer.server.port=8080"
       - "traefik.http.routers.tomcat-frontend-http.tls.certresolver=lets-encrypt"
       
-
-  portainer:
-    image: portainer/portainer
-    container_name: my-portainer
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /data/portainer:/data
-    networks:
-      - traefik-public
-    labels:
-      - traefik.enable=true
-      - "traefik.docker.network=traefik-public"
-      - traefik.http.routers.portainer_insecure.entrypoints=http
-      - traefik.http.routers.portainer_insecure.rule=Host(`portainer.wode.com`)
-      - traefik.http.routers.portainer_insecure.middlewares=redirect-to-https@docker
-
-      - traefik.http.routers.portainer.entrypoints=https
-      - traefik.http.routers.portainer.rule=Host(`portainer.wode.com`)
-      - traefik.http.routers.portainer.tls.certresolver=lets-encrypt
-      - traefik.http.services.portainer.loadbalancer.server.port=9000
 
 networks:
   traefik-public:
