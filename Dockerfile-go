@@ -1,0 +1,23 @@
+FROM ubuntu:20.04
+
+ENV GOLANG_VERSION 1.18.1
+ENV TZ=Asia/Shanghai
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH /usr/local/go/bin:$PATH
+ENV LANG C.UTF-8
+
+RUN set -ex \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		ca-certificates \
+		netbase \
+		tzdata \
+		curl \
+		wget \
+	&& wget -O go$GOLANG_VERSION.linux-amd64.tar.gz "https://go.dev/dl/go$GOLANG_VERSION.linux-amd64.tar.gz" \
+	&& rm -rf /usr/local/go && tar -C /usr/local -xzf go$GOLANG_VERSION.linux-amd64.tar.gz \
+	&& rm -rf go$GOLANG_VERSION.linux-amd64.tar.gz \
+	&& rm -rf /var/lib/apt/* 
+
+CMD ["bash"]
+
