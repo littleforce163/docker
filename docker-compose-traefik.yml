@@ -94,7 +94,23 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - DEBUG=false
-      - GITLAB_OMNIBUS_CONFIG=external_url 'http://git.wode.com';gitlab_rails['time_zone']='Asia/Shanghai';gitlab_rails['gitlab_shell_ssh_port']='10022';prometheus['enable']='false';grafana['enable']='false';redis_exporter['enable']='false';gitlab_exporter['enable']='false';node_exporter['enable']='false';postgres_exporter['enable']='false';alertmanager['enable']='false';
+      - GITLAB_OMNIBUS_CONFIG=external_url 'http://git.wode.com';gitlab_rails['time_zone']='Asia/Shanghai';gitlab_rails['gitlab_shell_ssh_port']='10022';
+      
+      # v1.4, optimise if needed.
+      #prometheus['enable']=false
+      #grafana['enable']=false
+      #redis_exporter['enable']=false
+      #gitlab_exporter['enable']=false
+      #node_exporter['enable']=false
+      #postgres_exporter['enable']=false
+      #alertmanager['enable']=false
+      #prometheus_monitoring['enable']=false
+
+      #puma['worker_processes']=2
+      #postgresql['shared_buffers']="128MB"
+      #postgresql['max_worker_processes']=4
+      #sidekiq['max_concurrency']=5
+      #sidekiq['min_concurrency']=1
   
     volumes:
       - "/data/gitlab/etc:/etc/gitlab"
